@@ -1,5 +1,9 @@
-"""Preprocessing package for cleaning and transforming data."""
+"""Preprocessing package for cleaning and model transformations."""
 
 from .cleaner import DataCleaner
+from .preprocessor import ModelPreprocessor
 
-__all__ = ["DataCleaner"]
+__all__ = [
+    "DataCleaner",
+    "ModelPreprocessor",
+]

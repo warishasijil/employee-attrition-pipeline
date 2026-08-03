@@ -4,9 +4,9 @@ from src.pipeline import EmployeeAttritionPipeline
 
 
 def main() -> None:
-    """Run the employee attrition data pipeline."""
+    """Run the complete baseline training pipeline."""
     pipeline = EmployeeAttritionPipeline()
-    pipeline.run_data_pipeline()
+    pipeline.run_training_pipeline()
 
 
 if __name__ == "__main__":

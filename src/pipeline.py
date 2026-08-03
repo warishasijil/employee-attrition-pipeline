@@ -4,19 +4,21 @@ from typing import Any
 
 import pandas as pd
 
-from src.data import DataLoader, DataValidator
+from src.data import DataLoader, DataSplitter, DataValidator
 from src.features import FeatureEngineer
-from src.preprocessing import DataCleaner
+from src.models import ModelEvaluator, ModelTrainer
+from src.preprocessing import DataCleaner, ModelPreprocessor
 from src.utils import Config
 from src.visualization import EDAAnalyzer
 
 
 class EmployeeAttritionPipeline:
-    """Coordinate the data stages of the employee attrition pipeline."""
+    """Coordinate data preparation and model-training stages."""
 
     def __init__(self) -> None:
         """Initialize pipeline components using project configuration."""
         self.target_column = Config.get("data", "target_column")
+        self.random_state = Config.get("project", "random_state")
 
         self.data_loader = DataLoader(
             Config.get("paths", "raw_data")
@@ -66,10 +68,26 @@ class EmployeeAttritionPipeline:
             ),
         )
 
+        self.data_splitter = DataSplitter(
+            target_column=self.target_column,
+            test_size=Config.get("data", "test_size"),
+            random_state=self.random_state,
+        )
+
+        self.preprocessor = ModelPreprocessor()
+
+        self.model_trainer = ModelTrainer(
+            random_state=self.random_state
+        )
+
+        self.model_evaluator = ModelEvaluator(
+            Config.get("paths", "metrics_output")
+        )
+
     def run_data_pipeline(self) -> pd.DataFrame:
         """
-        Run data loading, validation, cleaning, feature engineering,
-        saving, and exploratory data analysis.
+        Run loading, validation, cleaning, feature engineering, saving,
+        and exploratory analysis.
 
         Returns:
             Processed employee attrition dataset.
@@ -84,27 +102,70 @@ class EmployeeAttritionPipeline:
             raw_dataframe
         )
 
-        engineered_dataframe = self.feature_engineer.transform(
+        processed_dataframe = self.feature_engineer.transform(
             cleaned_dataframe
         )
 
         self.data_cleaner.save(
-            engineered_dataframe,
+            processed_dataframe,
             Config.get("paths", "processed_data"),
         )
 
         eda_summary = self.eda_analyzer.run(
-            engineered_dataframe
+            processed_dataframe
         )
 
         self._display_data_pipeline_summary(
             raw_dataframe=raw_dataframe,
-            processed_dataframe=engineered_dataframe,
+            processed_dataframe=processed_dataframe,
             validation_report=validation_report,
             eda_summary=eda_summary,
         )
 
-        return engineered_dataframe
+        return processed_dataframe
+
+    def run_training_pipeline(self) -> pd.DataFrame:
+        """
+        Run the complete data and baseline model-training pipeline.
+
+        Returns:
+            Model comparison table.
+        """
+        processed_dataframe = self.run_data_pipeline()
+
+        data_split = self.data_splitter.split(
+            processed_dataframe
+        )
+
+        X_train_transformed = self.preprocessor.fit_transform(
+            data_split.X_train
+        )
+
+        X_test_transformed = self.preprocessor.transform(
+            data_split.X_test
+        )
+
+        trained_models = self.model_trainer.train(
+            X_train_transformed,
+            data_split.y_train,
+        )
+
+        comparison = self.model_evaluator.compare(
+            trained_models,
+            X_test_transformed,
+            data_split.y_test,
+        )
+
+        self._display_training_pipeline_summary(
+            comparison=comparison,
+            training_rows=data_split.X_train.shape[0],
+            testing_rows=data_split.X_test.shape[0],
+            transformed_feature_count=(
+                X_train_transformed.shape[1]
+            ),
+        )
+
+        return comparison
 
     @staticmethod
     def _display_data_pipeline_summary(
@@ -113,7 +174,7 @@ class EmployeeAttritionPipeline:
         validation_report: dict[str, Any],
         eda_summary: dict[str, Any],
     ) -> None:
-        """Display a concise summary of the completed data pipeline."""
+        """Display a concise summary of the data pipeline."""
         removed_columns = sorted(
             set(raw_dataframe.columns)
             - set(processed_dataframe.columns)
@@ -155,11 +216,25 @@ class EmployeeAttritionPipeline:
             "Processed data saved to:",
             Config.get("paths", "processed_data"),
         )
+
+    @staticmethod
+    def _display_training_pipeline_summary(
+        comparison: pd.DataFrame,
+        training_rows: int,
+        testing_rows: int,
+        transformed_feature_count: int,
+    ) -> None:
+        """Display baseline model-training results."""
+        print()
+        print("=" * 60)
+        print("TRAINING PIPELINE COMPLETED")
+        print("=" * 60)
+        print(f"Training rows: {training_rows}")
+        print(f"Testing rows: {testing_rows}")
         print(
-            "Figures saved to:",
-            Config.get("paths", "figures_directory"),
+            f"Transformed feature count: "
+            f"{transformed_feature_count}"
         )
-        print(
-            "Summary tables saved to:",
-            Config.get("paths", "metrics_directory"),
-        )
+        print()
+        print("BASELINE MODEL COMPARISON")
+        print(comparison.round(4).to_string(index=False))
