@@ -73,6 +73,7 @@ artifacts/*
 models/*
 !models/.gitkeep
 !models/best_model.joblib
+!models/README.md
 
 
 # Operating-system files
