@@ -1,53 +1,82 @@
-# Virtual environment
+# ==========================================
+# Virtual environments
+
 .venv/
 venv/
+env/
 
-# Python cache
+
+# Python cache and compiled files
+
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Environment variables
+
+# Environment variables and secrets
+
 .env
 .env.*
+!.env.example
 
-# IDE files
+
+# IDE and editor files
+
 .vscode/
 .idea/
 
-# Jupyter
+
+# Jupyter temporary files
+
 .ipynb_checkpoints/
 
+
+# Testing and coverage
+
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Build and package output
+
+build/
+dist/
+*.egg-info/
+
+
 # Logs
-logs/*.log
 
-# Model and generated artifacts
-models/*.pkl
-models/*.joblib
-artifacts/*
+logs/*
+!logs/.gitkeep
 
-# Processed data
+
+# Raw, interim, and processed datasets
+
+data/raw/*
 data/interim/*
 data/processed/*
 
-# Keep folders tracked
+!data/raw/.gitkeep
 !data/interim/.gitkeep
 !data/processed/.gitkeep
+
+
+# Prediction and temporary artifacts
+
+artifacts/*
 !artifacts/.gitkeep
-!logs/.gitkeep
+
+# Trained models
+# Ignore experimental models but keep the
+# selected final production model
+models/*
 !models/.gitkeep
+!models/best_model.joblib
 
-# Testing and coverage
-.pytest_cache/
-.coverage
-htmlcov/
 
-# OS files
+# Operating-system files
+
 .DS_Store
 Thumbs.db
-# Raw datasets
-data/raw/*.csv
-!data/raw/.gitkeep
-# Python bytecode
-__pycache__/
-*.py[cod]
+Desktop.ini

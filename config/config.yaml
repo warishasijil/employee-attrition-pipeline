@@ -12,6 +12,8 @@ paths:
   figures_directory: reports/figures
   logs_directory: logs
   metrics_directory: reports/metrics
+  feature_importance_output: reports/metrics/feature_importance.csv
+  feature_importance_figure: reports/figures/feature_importance.png
 data:
   target_column: Attrition
   test_size: 0.20
