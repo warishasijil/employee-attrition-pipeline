@@ -5,6 +5,7 @@ from typing import Any
 import pandas as pd
 
 from src.data import DataLoader, DataValidator
+from src.features import FeatureEngineer
 from src.preprocessing import DataCleaner
 from src.utils import Config
 from src.visualization import EDAAnalyzer
@@ -23,7 +24,10 @@ class EmployeeAttritionPipeline:
 
         self.data_validator = DataValidator(
             target_column=self.target_column,
-            required_columns=Config.get("data", "required_columns"),
+            required_columns=Config.get(
+                "data",
+                "required_columns",
+            ),
             expected_target_values=Config.get(
                 "data",
                 "expected_target_values",
@@ -46,6 +50,10 @@ class EmployeeAttritionPipeline:
             ),
         )
 
+        self.feature_engineer = FeatureEngineer(
+            target_column=self.target_column,
+        )
+
         self.eda_analyzer = EDAAnalyzer(
             target_column=self.target_column,
             figures_directory=Config.get(
@@ -60,10 +68,11 @@ class EmployeeAttritionPipeline:
 
     def run_data_pipeline(self) -> pd.DataFrame:
         """
-        Run data loading, validation, cleaning, saving, and EDA.
+        Run data loading, validation, cleaning, feature engineering,
+        saving, and exploratory data analysis.
 
         Returns:
-            Cleaned employee attrition dataset.
+            Processed employee attrition dataset.
         """
         raw_dataframe = self.data_loader.load()
 
@@ -75,47 +84,57 @@ class EmployeeAttritionPipeline:
             raw_dataframe
         )
 
+        engineered_dataframe = self.feature_engineer.transform(
+            cleaned_dataframe
+        )
+
         self.data_cleaner.save(
-            cleaned_dataframe,
-            Config.get("paths", "interim_data"),
+            engineered_dataframe,
+            Config.get("paths", "processed_data"),
         )
 
         eda_summary = self.eda_analyzer.run(
-            cleaned_dataframe
+            engineered_dataframe
         )
 
         self._display_data_pipeline_summary(
             raw_dataframe=raw_dataframe,
-            cleaned_dataframe=cleaned_dataframe,
+            processed_dataframe=engineered_dataframe,
             validation_report=validation_report,
             eda_summary=eda_summary,
         )
 
-        return cleaned_dataframe
+        return engineered_dataframe
 
     @staticmethod
     def _display_data_pipeline_summary(
         raw_dataframe: pd.DataFrame,
-        cleaned_dataframe: pd.DataFrame,
+        processed_dataframe: pd.DataFrame,
         validation_report: dict[str, Any],
         eda_summary: dict[str, Any],
     ) -> None:
         """Display a concise summary of the completed data pipeline."""
         removed_columns = sorted(
             set(raw_dataframe.columns)
-            - set(cleaned_dataframe.columns)
+            - set(processed_dataframe.columns)
+        )
+
+        added_columns = sorted(
+            set(processed_dataframe.columns)
+            - set(raw_dataframe.columns)
         )
 
         print("=" * 60)
-        print("DAY 1 DATA PIPELINE COMPLETED")
+        print("DATA PIPELINE COMPLETED")
         print("=" * 60)
         print(
             f"Validation passed: "
             f"{validation_report['validation_passed']}"
         )
         print(f"Raw shape: {raw_dataframe.shape}")
-        print(f"Cleaned shape: {cleaned_dataframe.shape}")
+        print(f"Processed shape: {processed_dataframe.shape}")
         print(f"Removed columns: {removed_columns}")
+        print(f"Engineered columns: {added_columns}")
         print(
             f"Duplicate rows: "
             f"{validation_report['duplicate_rows']}"
@@ -133,8 +152,8 @@ class EmployeeAttritionPipeline:
             f"{len(eda_summary['categorical_columns'])}"
         )
         print(
-            "Cleaned data saved to:",
-            Config.get("paths", "interim_data"),
+            "Processed data saved to:",
+            Config.get("paths", "processed_data"),
         )
         print(
             "Figures saved to:",
