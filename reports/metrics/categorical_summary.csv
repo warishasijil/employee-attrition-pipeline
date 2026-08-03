@@ -1,0 +1,8 @@
+,count,unique,top,freq
+BusinessTravel,1470,3,Travel_Rarely,1043
+Department,1470,3,Research & Development,961
+EducationField,1470,6,Life Sciences,606
+Gender,1470,2,Male,882
+JobRole,1470,9,Sales Executive,326
+MaritalStatus,1470,3,Married,673
+OverTime,1470,2,No,1054

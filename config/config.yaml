@@ -11,11 +11,55 @@ paths:
   metrics_output: reports/metrics/model_comparison.csv
   figures_directory: reports/figures
   logs_directory: logs
-
+  metrics_directory: reports/metrics
 data:
   target_column: Attrition
   test_size: 0.20
   validation_size: 0.20
+
+  required_columns:
+    - Age
+    - Attrition
+    - BusinessTravel
+    - DailyRate
+    - Department
+    - DistanceFromHome
+    - Education
+    - EnvironmentSatisfaction
+    - Gender
+    - HourlyRate
+    - JobInvolvement
+    - JobLevel
+    - JobRole
+    - JobSatisfaction
+    - MaritalStatus
+    - MonthlyIncome
+    - MonthlyRate
+    - NumCompaniesWorked
+    - OverTime
+    - PercentSalaryHike
+    - PerformanceRating
+    - RelationshipSatisfaction
+    - StockOptionLevel
+    - TotalWorkingYears
+    - TrainingTimesLastYear
+    - WorkLifeBalance
+    - YearsAtCompany
+    - YearsInCurrentRole
+    - YearsSinceLastPromotion
+    - YearsWithCurrManager
+
+  expected_target_values:
+    - "Yes"
+    - "No"
+
+  constant_columns:
+    - EmployeeCount
+    - Over18
+    - StandardHours
+
+  identifier_columns:
+    - EmployeeNumber
 
 training:
   cross_validation_folds: 5
