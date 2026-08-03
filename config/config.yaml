@@ -1,0 +1,23 @@
+project:
+  name: employee-attrition-pipeline
+  version: "1.0.0"
+  random_state: 42
+
+paths:
+  raw_data: data/raw/WA_Fn-UseC_-HR-Employee-Attrition.csv
+  interim_data: data/interim/cleaned_employee_attrition.csv
+  processed_data: data/processed/processed_employee_attrition.csv
+  model_output: models/best_model.joblib
+  metrics_output: reports/metrics/model_comparison.csv
+  figures_directory: reports/figures
+  logs_directory: logs
+
+data:
+  target_column: Attrition
+  test_size: 0.20
+  validation_size: 0.20
+
+training:
+  cross_validation_folds: 5
+  scoring_metric: roc_auc
+  n_jobs: -1
